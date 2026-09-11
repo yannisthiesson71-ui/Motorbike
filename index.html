@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#111827">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="VeloMoteur">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon.svg">
+<title>VeloMoteur V3</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+<header><div><h1>VeloMoteur</h1><span>V3 • mode vélo</span></div><button id="settingsBtn">⚙️</button></header>
+
+<section class="dashboard">
+  <div class="speed"><small>VITESSE</small><strong id="speed">0.0</strong><em>km/h</em></div>
+  <div class="stats">
+    <div><small>DISTANCE</small><b id="distance">0.00 km</b></div>
+    <div><small>MOYENNE</small><b id="avg">0.0 km/h</b></div>
+    <div><small>MAX</small><b id="max">0.0 km/h</b></div>
+    <div><small>TEMPS</small><b id="time">00:00</b></div>
+  </div>
+</section>
+
+<section class="engine">
+  <div class="engineTop"><div><small>RÉGIME MOTEUR</small><strong id="rpm">900</strong><span> tr/min</span></div><div class="gear" id="gear">N</div></div>
+  <div class="bar"><i id="rpmBar"></i></div>
+  <div class="engineGrid"><div><small>ACCÉLÉRATION</small><b id="accel">0%</b></div><div><small>GAZ</small><b id="throttle">0%</b></div></div>
+</section>
+
+<section class="mapWrap"><div id="map">Appuie sur DÉMARRER pour activer le GPS.</div></section>
+
+<section class="controls">
+<button id="start" class="primary">▶ DÉMARRER</button>
+<button id="pause">Ⅱ PAUSE</button>
+<button id="reset">↻ RESET</button>
+</section>
+<p class="hint" id="status">GPS inactif</p>
+</main>
+
+<div id="modal" class="modal hidden"><div class="sheet">
+<h2>Réglages moteur</h2>
+<label>Moteur <select id="engineType"><option value="4">4 cylindres</option><option value="6">V6</option><option value="8">V8</option></select></label>
+<label>Régime max <input id="redline" type="range" min="5000" max="12000" step="500" value="8000"><b id="redlineVal">8000</b></label>
+<button id="closeSettings" class="primary">Fermer</button>
+</div></div>
+
+<script src="app.js"></script>
+</body>
+</html>
