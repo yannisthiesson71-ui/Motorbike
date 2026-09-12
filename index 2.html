@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07090b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>VeloMoteur V8</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#07090b;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body{padding:env(safe-area-inset-top) 10px env(safe-area-inset-bottom);background:radial-gradient(circle at 50% 20%,#20252a,#090b0e 55%,#030405)}
+main{max-width:1100px;margin:auto}header{height:64px;display:flex;align-items:center;justify-content:space-between}
+header button{width:44px;height:44px;border:1px solid #4a5056;border-radius:12px;background:#111519;color:#fff;font-size:21px}
+.logo{font-size:25px;font-weight:900;font-style:italic}.logo span{color:#f32630}
+.dash{display:grid;grid-template-columns:1fr 120px 1fr;align-items:center;gap:2px}.gbox{text-align:center}.gauge{width:100%;max-width:430px;display:block;margin:auto}
+.outer{fill:#0b0d10;stroke:#9aa0a5;stroke-width:5}.inner{fill:#080a0d;stroke:#30363c;stroke-width:2}
+.tick{stroke:#e0e2e4;stroke-width:2}.major{stroke-width:5}.red{stroke:#ff2832;stroke-width:4}
+.label{fill:#e7e8e9;text-anchor:middle;font-size:18px;font-weight:700}.needle{stroke:#ff2933;stroke-width:7;stroke-linecap:round;filter:drop-shadow(0 0 3px #ff2933)}
+.hub{fill:#15191d;stroke:#747b82;stroke-width:2}.title{fill:#aeb4b9;text-anchor:middle;font-size:15px;font-weight:700;letter-spacing:1px}
+.digital{fill:#fff;text-anchor:middle;font-size:39px;font-weight:800}.unit{fill:#a0a6ab;text-anchor:middle;font-size:12px}.gbox>b{font-size:10px;letter-spacing:2px;color:#939aa0}
+.mid{text-align:center;color:#cbd0d4}.mid strong{font-size:45px;font-style:italic;font-weight:900}.mid hr{border:0;border-top:2px solid #34393e;margin:10px}.mid div{margin:9px;font-size:17px}.mid small{display:block;color:#777f86;font-size:10px;margin-top:18px}
+.buttons{display:flex;justify-content:center;gap:9px;flex-wrap:wrap;margin:9px 0}.buttons button{border:1px solid #41484e;background:#11161a;color:#fff;border-radius:11px;padding:12px 16px;font-weight:800}#start{background:#b6121b;border-color:#e42b34}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:10px 0 13px}.stats div{background:#0d1115;border:1px solid #292f35;border-radius:12px;padding:9px;text-align:center;color:#7e878e;font-size:9px;letter-spacing:1px}.stats b{display:block;color:#fff;font-size:13px;margin-top:4px;letter-spacing:0}
+#map{height:175px;border:1px solid #292f35;border-radius:17px;overflow:hidden;background:#0d1115;display:flex;align-items:center;justify-content:center;color:#727a81}#map iframe{width:100%;height:100%;border:0}
+@media(max-width:700px){.dash{grid-template-columns:1fr 0 1fr}.mid{display:none}.gauge{width:49vw}.gbox>b{font-size:8px}.stats b{font-size:11px}.logo{font-size:23px}}
+</style></head>
+<body><main>
+<header><button>☰</button><div class="logo">Velo<span>Moteur</span></div><button>⚙</button></header>
+<section class="dash">
+<div class="gbox"><svg class="gauge" viewBox="0 0 360 360"><circle class="outer" cx="180" cy="180" r="166"/><circle class="inner" cx="180" cy="180" r="154"/><g id="speedTicks"></g><g id="speedLabels"></g><line id="speedNeedle" class="needle" x1="180" y1="180" x2="180" y2="48"/><circle class="hub" cx="180" cy="180" r="13"/><text x="180" y="150" class="title">KM/H</text><text id="speed" x="180" y="224" class="digital">0</text><text x="180" y="248" class="unit">km/h</text></svg><b>VITESSE</b></div>
+<div class="mid"><strong>V8</strong><hr><div>⚙ <span id="gear">1</span></div><div>⚡ <span id="throttle">0%</span></div><small id="status">GPS inactif</small></div>
+<div class="gbox"><svg class="gauge" viewBox="0 0 360 360"><circle class="outer" cx="180" cy="180" r="166"/><circle class="inner" cx="180" cy="180" r="154"/><g id="rpmTicks"></g><g id="rpmLabels"></g><line id="rpmNeedle" class="needle" x1="180" y1="180" x2="180" y2="48"/><circle class="hub" cx="180" cy="180" r="13"/><text x="180" y="150" class="title">RPM ×1000</text><text id="rpm" x="180" y="224" class="digital">0.9</text><text x="180" y="248" class="unit">×1000 RPM</text></svg><b>RÉGIME MOTEUR</b></div>
+</section>
+<section class="buttons"><button id="start">▶ DÉMARRER</button><button id="pause">Ⅱ PAUSE</button><button id="reset">↻ RESET</button></section>
+<section class="stats"><div>DISTANCE<b id="distance">0.00 km</b></div><div>MOYENNE<b id="avg">0.0 km/h</b></div><div>MAX<b id="max">0.0 km/h</b></div><div>TEMPS<b id="time">00:00</b></div></section>
+<div id="map">Carte GPS</div></main>
+<script>
+const $=id=>document.getElementById(id),clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function polar(r,a){let t=(a-90)*Math.PI/180;return[180+r*Math.cos(t),180+r*Math.sin(t)]}
+function makeGauge(ticks,max,red,tickId,labelId){let tg=$(tickId),lg=$(labelId);for(let i=0;i<=ticks;i++){let a=-130+260*i/ticks,major=i%5===0,p1=polar(major?138:145,a),p2=polar(154,a),e=document.createElementNS("http://www.w3.org/2000/svg","line");e.setAttribute("x1",p1[0]);e.setAttribute("y1",p1[1]);e.setAttribute("x2",p2[0]);e.setAttribute("y2",p2[1]);e.setAttribute("class","tick "+(major?"major ":"")+(i/ticks>=red?"red":""));tg.appendChild(e)}for(let i=0;i<=max;i++){let a=-130+260*i/max,p=polar(116,a),e=document.createElementNS("http://www.w3.org/2000/svg","text");e.setAttribute("x",p[0]);e.setAttribute("y",p[1]+6);e.setAttribute("class","label");e.textContent=i;lg.appendChild(e)}}
+makeGauge(55,55,1.1,"speedTicks","speedLabels");makeGauge(40,8,.75,"rpmTicks","rpmLabels");
+function needle(id,value,max){let p=polar(132,-130+260*clamp(value/max,0,1));$(id).setAttribute("x2",p[0]);$(id).setAttribute("y2",p[1])}
+let running=false,paused=false,watch=null,last=null,prevTime=0,distance=0,moving=0,maxSpeed=0,rpm=900,gear=1;
+function hav(a,b){let R=6371000,p=a.coords.latitude*Math.PI/180,q=b.coords.latitude*Math.PI/180,d=q-p,l=(b.coords.longitude-a.coords.longitude)*Math.PI/180,x=Math.sin(d/2)**2+Math.cos(p)*Math.cos(q)*Math.sin(l/2)**2;return 2*R*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))}
+function ui(s){$("speed").textContent=s.toFixed(1);$("rpm").textContent=(rpm/1000).toFixed(1);$("gear").textContent=gear;$("throttle").textContent=Math.round(clamp(s/55,0,1)*100)+"%";$("distance").textContent=(distance/1000).toFixed(2)+" km";$("max").textContent=maxSpeed.toFixed(1)+" km/h";$("avg").textContent=(moving?(distance/1000)/(moving/3600):0).toFixed(1)+" km/h";$("time").textContent=String(Math.floor(moving/60)).padStart(2,"0")+":"+String(Math.floor(moving%60)).padStart(2,"0");needle("speedNeedle",s,55);needle("rpmNeedle",rpm,8000)}
+function position(p){if(!running||paused)return;let s=Math.max(0,(p.coords.speed||0)*3.6),now=p.timestamp||Date.now(),dt=prevTime?clamp((now-prevTime)/1000,.05,2):.1;if(last){let d=hav(last,p);if(d<100){distance+=d;if(s>.8)moving+=dt}}last=p;prevTime=now;maxSpeed=Math.max(maxSpeed,s);let lim=[0,10,20,32,45,58,99];if(s>lim[gear]+2&&gear<6)gear++;if(s<lim[gear-1]-2&&gear>1)gear--;let ratios=[0,3.2,2.1,1.5,1.15,.9,.72],wheel=s*1000/60/(Math.PI*.34),target=s<2?900+s*500:clamp(wheel*ratios[gear]*2.8+s*10,850,7850);rpm+=(target-rpm)*clamp(dt*5,.03,.35);ui(s);if(isFinite(p.coords.latitude))$("map").innerHTML='<iframe src="https://www.openstreetmap.org/export/embed.html?bbox='+(p.coords.longitude-.006)+'%2C'+(p.coords.latitude-.004)+'%2C'+(p.coords.longitude+.006)+'%2C'+(p.coords.latitude+.004)+'&layer=mapnik&marker='+p.coords.latitude+'%2C'+p.coords.longitude+'"></iframe>'}
+function gps(){if(!navigator.geolocation){$("status").textContent="GPS indisponible";return}watch=navigator.geolocation.watchPosition(position,e=>$("status").textContent="GPS : "+e.message,{enableHighAccuracy:true,maximumAge:500,timeout:10000})}
+$("start").onclick=()=>{running=true;paused=false;$("status").textContent="GPS actif • V8 en route";gps();$("start").textContent="▶ EN ROUTE"};
+$("pause").onclick=()=>{if(running){paused=!paused;$("pause").textContent=paused?"▶ REPRENDRE":"Ⅱ PAUSE";$("status").textContent=paused?"En pause":"GPS actif • V8 en route"}};
+$("reset").onclick=()=>{running=false;paused=false;if(watch!==null)navigator.geolocation.clearWatch(watch);watch=null;last=null;prevTime=0;distance=0;moving=0;maxSpeed=0;rpm=900;gear=1;$("status").textContent="GPS inactif";$("start").textContent="▶ DÉMARRER";ui(0)};
+ui(0);
+</script></body></html>
